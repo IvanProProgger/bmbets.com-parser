@@ -9,7 +9,6 @@ PARSE_URL = "https://bmbets.com/"
 def get_parse_link() -> str:
     """
     Запрашивает у пользователя название категории, региона и лиги.
-
     Возвращает ссылку на соответствующую страницу
     """
     category = input("Введите вид спорта:\n")
@@ -39,12 +38,9 @@ def parse_matches_for_coefs(response) -> None:
     for link in soup.find_all("td", class_="players-name-col"):
         participants.append(link.text.strip().replace("\n\n\n\n", " vs "))
     if participants:
-        if soup.find_all("td", class_="odds-col4") != []:
-            for link in soup.find_all("td", class_="odds-col4"):  # TODO может быть odds-col3
-                coeffs.append(link.text.strip().replace("B's", " ")[1:])
-        else:
-            for link in soup.find_all("td", class_="odds-col3"):
-                coeffs.append(link.text.strip().replace("B's", " ")[1:])
+        a = list(filter(lambda x: x != [], (soup.find_all("td", class_="odds-col3"),soup.find_all("td", class_="odds-col4"),soup.find_all("td", class_="odds-col5"))))
+        for link in a[0]:
+            coeffs.append(link.text.strip().replace("B's", " ")[1:])
     count = len(coeffs) // len(participants)  # TODO Всегда ли в одном спорте, лиге... одинаковое кол-во кэфов
     while len(coeffs) > 0:
         participants_coeffs.append(", ".join(coeffs[:count]))
@@ -54,7 +50,7 @@ def parse_matches_for_coefs(response) -> None:
         print(*element)
 
 
-if __name__ == "__main__":
+if name == "__main__":
     parse_link = get_parse_link()
     try:
         response = requests.get(parse_link, timeout=60)
