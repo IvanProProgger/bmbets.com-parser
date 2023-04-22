@@ -1,39 +1,65 @@
+import sys
+
 import requests
 from bs4 import BeautifulSoup
-#url = 'https://bmbets.com/'
-#req = requests.get(url)
-#soup = BeautifulSoup(req.text, 'html.parser')
-#a = soup.find_all('li', 'highlight')
-#print(a)
 
-#with open('parsing.html') as file:
-#    src = file.read()
-#soup = BeautifulSoup(src, 'html.parser')
-start_link = 'https://bmbets.com/'
-category = input().replace(' ', '-').lower()+'/'
-country = input().replace(' ', '-').lower()+'/'
-division = input().replace(' ', '-').lower()+'/'
-#parse_link = start_link + category + country + division
-#req = requests.get(parse_link)
-#print(req)
-#soup = BeautifulSoup(req.text, 'html.parser')
-#print(soup)
-table_coef = {}
-a = []
-b = []
-c = []
-parse_link = start_link + category + country + division
-req = requests.get(parse_link)
-soup = BeautifulSoup(req.text, 'html.parser')
+PARSE_URL = "https://bmbets.com/"
 
-for link in soup.find_all('td', class_='players-name-col'):
-    a.append(link.text.strip().replace('\n\n\n\n', ' vs '))
-for link in soup.find_all('td', class_='odds-col4'):
-    b.append(link.text.strip().replace("B's", ' ')[1:])
-count = int(len(b) / len(a))
-while len(b) > 0:
-    c.append(', '.join(b[:count]))
-    b = b[count:]
-x = zip(a,c)
-print(*x, sep = '\n')
 
+def get_parse_link() -> str:
+    """
+    Запрашивает у пользователя название категории, региона и лиги.
+
+    Возвращает ссылку на соответствующую страницу
+    """
+    category = input("Введите вид спорта:\n")
+    region = input("Введите регион:\n")
+    division = input("Введите дивизион:\n")
+    if not all([category, region, division]):
+        sys.exit("Введена некорректная информация")
+
+    parse_link = PARSE_URL + "/".join(
+        map(
+            lambda x: x.replace(" ", "-").lower(), [category, region, division]
+        )
+    )
+
+    return parse_link
+
+
+def parse_matches_for_coefs(response) -> None:
+    """
+    Получает ответ от сервера. Парсит матчи и соответсвующие коэффициенты.
+    Вывод в консоль результат
+    """
+    soup = BeautifulSoup(response.text, "html.parser")
+    participants = []
+    coeffs = []
+    participants_coeffs = []
+    for link in soup.find_all("td", class_="players-name-col"):
+        participants.append(link.text.strip().replace("\n\n\n\n", " vs "))
+    if participants:
+        for link in soup.find_all(
+            "td", class_="odds-col4"
+        ):  # TODO может быть odds-col3
+            coeffs.append(link.text.strip().replace("B's", " ")[1:])
+        count = len(coeffs) // len(
+            participants
+        )  # TODO Всегда ли в одном спорте, лиге... одинаковое кол-во кэфов
+        while len(coeffs) > 0:
+            participants_coeffs.append(", ".join(coeffs[:count]))
+            coeffs = coeffs[count:]
+        parsed_data = zip(participants, participants_coeffs)
+        for element in parsed_data:
+            print(*element)
+
+
+if __name__ == "__main__":
+    parse_link = get_parse_link()
+    try:
+        response = requests.get(parse_link, timeout=60)
+    except requests.exceptions.Timeout:
+        print("Время ожидания истекло")
+    except requests.exceptions.RequestException:
+        print("Ошибка обработки запроса")
+    parsed_data = parse_matches_for_coefs(response)
