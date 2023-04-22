@@ -39,19 +39,19 @@ def parse_matches_for_coefs(response) -> None:
     for link in soup.find_all("td", class_="players-name-col"):
         participants.append(link.text.strip().replace("\n\n\n\n", " vs "))
     if participants:
-        for link in soup.find_all(
-            "td", class_="odds-col4"
-        ):  # TODO может быть odds-col3
-            coeffs.append(link.text.strip().replace("B's", " ")[1:])
-        count = len(coeffs) // len(
-            participants
-        )  # TODO Всегда ли в одном спорте, лиге... одинаковое кол-во кэфов
-        while len(coeffs) > 0:
-            participants_coeffs.append(", ".join(coeffs[:count]))
-            coeffs = coeffs[count:]
-        parsed_data = zip(participants, participants_coeffs)
-        for element in parsed_data:
-            print(*element)
+        if soup.find_all("td", class_="odds-col4") != []:
+            for link in soup.find_all("td", class_="odds-col4"):  # TODO может быть odds-col3
+                coeffs.append(link.text.strip().replace("B's", " ")[1:])
+        else:
+            for link in soup.find_all("td", class_="odds-col3"):
+                coeffs.append(link.text.strip().replace("B's", " ")[1:])
+    count = len(coeffs) // len(participants)  # TODO Всегда ли в одном спорте, лиге... одинаковое кол-во кэфов
+    while len(coeffs) > 0:
+        participants_coeffs.append(", ".join(coeffs[:count]))
+        coeffs = coeffs[count:]
+    parsed_data = zip(participants, participants_coeffs)
+    for element in parsed_data:
+        print(*element)
 
 
 if __name__ == "__main__":
