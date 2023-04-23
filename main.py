@@ -50,7 +50,7 @@ def parse_matches_for_coefs(response) -> None:
         print(*element)
 
 
-if name == "__main__":
+if __name__ == "__main__":
     parse_link = get_parse_link()
     try:
         response = requests.get(parse_link, timeout=60)
