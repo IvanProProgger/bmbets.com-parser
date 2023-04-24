@@ -41,7 +41,13 @@ def parse_matches_for_coefs(response) -> None:
         a = list(filter(lambda x: x != [], (soup.find_all("td", class_="odds-col3"),soup.find_all("td", class_="odds-col4"),soup.find_all("td", class_="odds-col5"))))
         for link in a[0]:
             coeffs.append(link.text.strip().replace("B's", " ")[1:])
-    count = len(coeffs) // len(participants)  # TODO Всегда ли в одном спорте, лиге... одинаковое кол-во кэфов
+
+    try:
+        count = len(coeffs) // len(participants)       # TODO Всегда ли в одном спорте, лиге... одинаковое кол-во кэфов
+    except ZeroDivisionError:
+        print('В данной лиге нет матчей для ставки или лига не найдена')
+
+
     while len(coeffs) > 0:
         participants_coeffs.append(", ".join(coeffs[:count]))
         coeffs = coeffs[count:]
